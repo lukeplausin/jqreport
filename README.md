@@ -1,11 +1,11 @@
 # JQReport
 Quick and dirty report builder - build a summary report from any JSON data in seconds!
 
-## Installation
+# Installation
 
 `pip install git+https://github.com/lukeplausin/jqreport.git`
 
-## Usage
+# Usage
 
 You can build a report from an input file.
 
