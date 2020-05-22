@@ -1,5 +1,10 @@
 import argparse
 import datetime
+import os
+import yaml
+import json
+import sys
+from .cognition import Cognition
 
 # import dateutil.parser
 
@@ -12,15 +17,23 @@ def main():
     parser.add_argument('-f', '--input-file', dest='in_file',
         help='Input JSON or YAML file (you can also pipe data in).')
     parser.add_argument('-o', '--output-file', dest='out_file',
+        default=DEFAULT_OUTPUT_FILE,
         help='Output HTML file. Default: {}'.format(DEFAULT_OUTPUT_FILE))
 
     # TODO - add other parameters to taste
+    # Reorder => yes or no?
+    # It might make sense to reorder keys based on size / alphabetical, or keep as is
 
     args = parser.parse_args()
-    in_file = args.in_file
-    out_file = args.out_file
-    print(f"{in_file} => {out_file}")
+    if args.in_file:
+        with open(args.in_file, 'r') as f:
+            source_data = yaml.safe_load(f)
+    else:
+        source_data = yaml.safe_load(sys.stdin)
+    cog = Cognition(source_data)
 
+    with open(args.out_file, 'w') as f:
+        f.write(cog.top_level())
 
 if __name__ == "__main__":
     main()

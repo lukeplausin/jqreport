@@ -19,3 +19,6 @@ Use any data source!
 
 `aws s3api list-buckets | jqreport`
 
+And it works great with JQ [https://stedolan.github.io/jq/manual/](https://stedolan.github.io/jq/manual/)
+
+`aws s3api list-buckets | jq '.Contents | [ .[] | select(.LastModified < "2020") ]' | jqreport`
