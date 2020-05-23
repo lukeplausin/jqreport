@@ -1,0 +1,33 @@
+{% from 'macros.html.j2' import show_source %}
+{% if key != '.' %}
+{% if contents.data | length <= 1000 %}
+{{ show_source(raw, key) }}
+{% endif %}
+{% endif %}
+
+<div class="row mb-3">
+<table class="table" data-toggle="table" id="{{ key | replace('.', '_') | urlencode }}"
+  {# data-url="#json_{{ key | replace('.', '_') | urlencode }}" #}
+  data-pagination="true"
+  data-search="true"
+  data-page-size="50"
+  data-page-list="[10, 25, 50, 100, 250, 500, 1000, All]"
+    >
+  <thead>
+    <tr>
+      <th data-sortable="true" data-field="key" scope="col">Key</th>
+      <th data-sortable="true" data-field="value" scope="col">Value</th>
+    </tr>
+  </thead>
+{# Couldnt get javascript working... #}
+   <tbody>
+{% for key, value in contents.data.items() %}
+    <tr>
+      <th scope="row">{{ key }}</th>
+      <td>{{ value }}</td>
+    </tr>
+{% endfor %}
+  </tbody>
+</table>
+
+</div>

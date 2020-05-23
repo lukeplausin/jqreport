@@ -5,6 +5,8 @@ import yaml
 import json
 import sys
 from .cognition import Cognition
+import subprocess
+import platform
 
 # import dateutil.parser
 
@@ -19,6 +21,8 @@ def main():
     parser.add_argument('-o', '--output-file', dest='out_file',
         default=DEFAULT_OUTPUT_FILE,
         help='Output HTML file. Default: {}'.format(DEFAULT_OUTPUT_FILE))
+    parser.add_argument('--open-output', dest='open_output', action='store_true',
+        help='Open the output file once it has been written to.')
 
     # TODO - add other parameters to taste
     # Reorder => yes or no?
@@ -34,6 +38,14 @@ def main():
 
     with open(args.out_file, 'w') as f:
         f.write(cog.render())
+
+    if args.open_output:
+        if platform.system() == 'Darwin':       # macOS
+            subprocess.call(('open', args.out_file))
+        elif platform.system() == 'Windows':    # Windows
+            os.startfile(args.out_file)
+        else:                                   # linux variants
+            subprocess.call(('xdg-open', args.out_file))
 
 if __name__ == "__main__":
     main()

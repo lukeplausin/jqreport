@@ -240,9 +240,24 @@ class CognitionDict(Cognition):
         super(CognitionDict, self).__init__(data, key, template)
     # contents will probably need to be overloaded for this one...
 
+template_simple_kv = env.get_template('simple_kv.html.j2')
 class CognitionDictFlat(CognitionList):
     # TODO
     # Simple (flat) dictionary - this can probably be displayed as a table
-    def __init__(self, data, key, template=template_scalar):
+    def __init__(self, data, key, template=template_simple_kv):
         super(CognitionDictFlat, self).__init__(data, key, template)
     # contents will probably need to be overloaded for this one...
+
+    def interpret(self):
+        # Let's try to make some guesses about the data.
+        # Try to work out how to display myself....
+        if not isinstance(self.data, dict):
+            raise Exception("CognitionDictFlat data must be a dict")
+        else:
+            # This class is made for flat dictionaries... 
+            # other types should work but might not display properly
+            self.contents = {
+                "data": self.data,
+                "key_counts": len(self.data.keys()),
+            }
+

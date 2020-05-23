@@ -1,21 +1,31 @@
 {% from 'macros.html.j2' import show_source %}
 {% if key != '.' %}
+{% if contents.data | length <= 1000 %}
 {{ show_source(raw, key) }}
+{% endif %}
 {% endif %}
 
 <div class="row mb-3">
-<table class="table">
+<table class="table" data-toggle="table" id="{{ key | replace('.', '_') | urlencode }}"
+  {# data-url="#json_{{ key | replace('.', '_') | urlencode }}" #}
+  data-pagination="true"
+  data-search="true"
+  data-page-size="50"
+  data-page-list="[10, 25, 50, 100, 250, 500, 1000, All]"
+    >
   <thead>
     <tr>
-      <th scope="col">#</th>
+      <th data-sortable="true" data-field="index" scope="col">#</th>
 {% for table_key in contents.table_keys %}
-      <th scope="col">{{ table_key }}</th>
+      <th data-sortable="true" data-field="{{ table_key }}" scope="col">{{ table_key }}</th>
 {% endfor %}
     </tr>
   </thead>
-  <tbody>
-    <tr>
+{% if (contents.data | length <= 1000) or True %}
+{# Couldnt get javascript working... #}
+   <tbody>
 {% for row in contents.data %}
+    <tr>
       <th scope="row">{{ loop.index }}</th>
 {% if row is mapping %}
 {% for table_key in contents.table_keys %}
@@ -27,9 +37,22 @@
     </tr>
 {% endfor %}
   </tbody>
+{% endif %}
 </table>
+
+{# {% if contents.data | length > 1000 %}
+<script type="application/json" id="json_{{ key | replace('.', '_') | urlencode }}">{{ raw | safe }}</script>
+<script type="application/javascript" id="json_load_{{ key | replace('.', '_') | urlencode }}">
+  $('#{{ key | replace('.', '_') | urlencode }}').bootstrapTable({
+    data: JSON.parse(json_{{ key | replace('.', '_') | urlencode }}.text)
+  })
+</script>
+{% endif %} #}
+
 </div>
 
+{# $('#_Contents').bootstrapTable(JSON.parse(json__Contents.text)) #}
 {# TODO: Add info about what keys are omitted, percentage of keys in table etc...
    sort by columns, search bar, pie chart....
+   fix the loading issue for v. large documents
  #}
