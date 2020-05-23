@@ -7,6 +7,7 @@ import sys
 from .cognition import Cognition
 import subprocess
 import platform
+import logging
 
 # import dateutil.parser
 
@@ -23,12 +24,21 @@ def main():
         help='Output HTML file. Default: {}'.format(DEFAULT_OUTPUT_FILE))
     parser.add_argument('--open-output', dest='open_output', action='store_true',
         help='Open the output file once it has been written to.')
+    parser.add_argument('--debug', dest='debug', action='store_true',
+        help='Show debugging output.')
 
     # TODO - add other parameters to taste
     # Reorder => yes or no?
     # It might make sense to reorder keys based on size / alphabetical, or keep as is
 
     args = parser.parse_args()
+    if args.debug:
+        logging.basicConfig(stream=sys.stdout, level=logging.DEBUG,
+            format="%(asctime)s,%(msecs)d %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s"
+        )
+        cog_logger = logging.getLogger('jqreport.cognition')
+        cog_logger.setLevel(logging.DEBUG)
+
     if args.in_file:
         with open(args.in_file, 'r') as f:
             source_data = yaml.safe_load(f)

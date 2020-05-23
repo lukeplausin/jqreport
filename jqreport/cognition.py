@@ -6,29 +6,20 @@ import os
 import logging
 import statistics
 
+from jinja2 import Environment, PackageLoader, select_autoescape
+
 DICTLIST_DICT_MIN_RATIO = 0.5
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
-from jinja2 import Environment, PackageLoader, select_autoescape
 env = Environment(
     loader=PackageLoader('jqreport', 'templates'),
     autoescape=select_autoescape(['html', 'xml'])
 )
 
-# template_file_top_level = pkg_resources.resource_filename(
-#     __name__, os.path.join('templates', "page.html.j2"))
-# with open(template_file_top_level, 'r') as f:
-#     template_top_level = Template(f.read())
 template_top_level = env.get_template('page.html.j2')
-
-# template_file_scalar = pkg_resources.resource_filename(
-#     __name__, os.path.join('templates', "scalar.html.j2"))
-# with open(template_file_scalar, 'r') as f:
-#     template_scalar = Template(f.read())
 template_scalar = env.get_template('scalar.html.j2')
-    
-# TODO logger
+
 def simplicity(obj):
     # Rate the simplicity of the dictionary. Lower number is more simple.
     # 0 == scalar, 1 == list / flat, 2 == table, 3+ == complex
@@ -42,6 +33,7 @@ def simplicity(obj):
         logger.debug("Iterating over dict entries")
         max_rval = 0
         for k, v in obj.items():
+            logger.debug("key: {}, value: {}".format(k, v))
             child_simplicity = simplicity(v)
             max_rval = max(max_rval, child_simplicity)
             if max_rval >= 2:
@@ -137,6 +129,7 @@ class Cognition:
         # Let's try to make some guesses about the data.
         # Try to work out how to display myself....
         if isinstance(self.data, list) or isinstance(self.data, dict):
+            # Complex type, interpret data
             self.contents = interpret_data(data=self.data, key=self.key)
         else:
             self.contents = str(self.data)
@@ -145,12 +138,6 @@ class Cognition:
         # Create the document.
         return self.template.render(
             contents=self.contents, raw=json.dumps(self.data, indent=2), key=self.key)
-
-# If object is a list:
-# template_file_list = pkg_resources.resource_filename(
-#     __name__, os.path.join('templates', "scalar.html.j2"))
-# with open(template_file_list, 'r') as f:
-#     template_list = Template(f.read())
 
 template_list = env.get_template('scalar.html.j2')
 class CognitionList(Cognition):
@@ -177,12 +164,6 @@ class CognitionList(Cognition):
     def interpret(self):
         # This is just temporary
         self.contents = str(self.data)
-
-
-# template_file_dictlist = pkg_resources.resource_filename(
-#     __name__, os.path.join('templates', "dictlist.html.j2"))
-# with open(template_file_dictlist, 'r') as f:
-#     template_dictlist = Template(f.read())
 
 template_dictlist = env.get_template('dictlist.html.j2')
 class CognitionDictList(Cognition):
@@ -240,6 +221,24 @@ class CognitionDict(Cognition):
         super(CognitionDict, self).__init__(data, key, template)
     # contents will probably need to be overloaded for this one...
 
+    def interpret(self):
+        # Let's try to make some guesses about the data.
+        if not isinstance(self.data, dict):
+            raise Exception("CognitionDict data must be a dict")
+        else:
+            # This is a complex type, child entries should be interpreted also.
+            self.contents = {
+                "data": {
+                    k: interpret_data(
+                        data=v,
+                        key="{}.{}".format(self.key, k)
+                    )
+                    for k, v in self.data.items()
+                },
+                "key_counts": len(self.data.keys()),
+            }
+
+
 template_simple_kv = env.get_template('simple_kv.html.j2')
 class CognitionDictFlat(CognitionList):
     # TODO
@@ -260,4 +259,3 @@ class CognitionDictFlat(CognitionList):
                 "data": self.data,
                 "key_counts": len(self.data.keys()),
             }
-
