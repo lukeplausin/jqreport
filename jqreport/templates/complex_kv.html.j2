@@ -1,0 +1,14 @@
+{# {% from 'macros.html.j2' import show_source %}
+{% if key != '.' %}
+{% if contents.data | length <= 10 %}
+{{ show_source(raw, key) }}
+{% endif %}
+{% endif %} #}
+<dl>
+{% for key, value in contents.data.items() %}
+    <dt><button type="button" class="btn btn-default">
+    <span class="fa fa-plus"></span></button>{{ key }}</dt>
+    <dd>{{ value }}</dd>
+{% endfor %}
+</dl>
+{# TODO - give nested KVs some indent #}

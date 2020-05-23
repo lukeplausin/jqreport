@@ -5,10 +5,13 @@ from jinja2 import Template
 import os
 import logging
 import statistics
+import random
 
 from jinja2 import Environment, PackageLoader, select_autoescape
 
 DICTLIST_DICT_MIN_RATIO = 0.5
+COMPLEXITY_SAMPLE_SIZE = 50   # Sample size for assessing complexity
+COMPLEX_LENGTH_THRESHOLD = 100 # Length threshold for an object to be considered complex
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +22,13 @@ env = Environment(
 
 template_top_level = env.get_template('page.html.j2')
 template_scalar = env.get_template('scalar.html.j2')
+template_list = env.get_template('scalar.html.j2')
+template_dictlist = env.get_template('dictlist.html.j2')
+template_simple_kv = env.get_template('simple_kv.html.j2')
+
+# TODO do a better KV template for complex data
+# template_complex_kv = template_simple_kv
+template_complex_kv = env.get_template('complex_kv.html.j2')
 
 def simplicity(obj):
     # Rate the simplicity of the dictionary. Lower number is more simple.
@@ -32,7 +42,13 @@ def simplicity(obj):
             return simplicity(list(obj.values())[0])
         logger.debug("Iterating over dict entries")
         max_rval = 0
-        for k, v in obj.items():
+        if len(obj.values()) > COMPLEX_LENGTH_THRESHOLD:
+            logger.debug("Object is large (n={}), sampling elements at random".format(len(obj.keys())))
+            sample = random.sample(obj.keys(), COMPLEXITY_SAMPLE_SIZE)
+        else:
+            sample = list(obj.keys())
+        for k in sample:
+            v = obj[k]
             logger.debug("key: {}, value: {}".format(k, v))
             child_simplicity = simplicity(v)
             max_rval = max(max_rval, child_simplicity)
@@ -53,12 +69,17 @@ def simplicity(obj):
             logger.debug("Object is scalar list, delegating to only child")
             return simplicity(obj[0])
         else:
+            if len(obj) > COMPLEX_LENGTH_THRESHOLD:
+                logger.debug("Object is large (n={}), sampling elements at random".format(len(obj)))
+                sample = random.sample(obj, COMPLEXITY_SAMPLE_SIZE)
+            else:
+                logger.debug("Iterating over list entries")
+                sample = obj
             max_rval = 0
-            logger.debug("Iterating over list entries")
-            for idx, v in enumerate(obj):
+            for idx, v in enumerate(sample):
                 child_simplicity = simplicity(v)
                 max_rval = max(max_rval, child_simplicity)
-                if max_rval >= 2:
+                if max_rval >= 3:
                     # no point going further, child is a horrible mess of tangled 
                     # json and jumbled lists, break now while we're ahead
                     logger.debug("Index {} has score {}, object score {}".format(
@@ -87,8 +108,19 @@ def interpret_data(data, key='.'):
 
         # I am a list... let's look at elements
         else:
-            modal_type = statistics.mode([el.__class__ for el in data])
-            if modal_type and modal_type == dict and simplicity(data) <= 2:
+            if len(data) > COMPLEX_LENGTH_THRESHOLD:
+                logger.debug("Object is long (n={}), sampling elements at random".format(len(data)))
+                sample = random.sample(data, COMPLEXITY_SAMPLE_SIZE)
+            else:
+                sample = data
+            try:
+                modal_type = statistics.mode([el.__class__ for el in sample])
+            except statistics.StatisticsError:
+                # This can happen when types are mixed
+                return CognitionList(data=data, key=key)
+            data_simplicity = simplicity(sample)
+            logger.info("Object simplicity rating is {}".format(data_simplicity))
+            if modal_type and modal_type == dict and data_simplicity <= 2:
                 # return CognitionDictList(data=data, key=key)
                 try:
                     return CognitionDictList(data=data, key=key)
@@ -104,10 +136,18 @@ def interpret_data(data, key='.'):
         if len(data) == 1:
             sub_key = list(data.keys())[0]
             return interpret_data(data[sub_key], key="{}.{}".format(key.rstrip('.'), sub_key))
-        elif simplicity(data) <= 2:
-            return CognitionDictFlat(data=data, key=key)
         else:
-            return CognitionDict(data=data, key=key)
+            data_simplicity = simplicity(data)
+            logger.info("Object simplicity rating is {}".format(data_simplicity))
+            if data_simplicity <= 2:
+                return CognitionDictFlat(data=data, key=key)
+            else:
+                rval = CognitionDict(data=data, key=key)
+                if data_simplicity > 3:
+                    # For more complicated objects, use a different template
+                    rval.template = template_complex_kv
+                return rval
+
     else:
         print("Data is a scalar, return a simple template")
         return Cognition(data=data, key=key, template=template_scalar)
@@ -139,7 +179,9 @@ class Cognition:
         return self.template.render(
             contents=self.contents, raw=json.dumps(self.data, indent=2), key=self.key)
 
-template_list = env.get_template('scalar.html.j2')
+# TODO: List template
+
+
 class CognitionList(Cognition):
     # TODO
     def __init__(self, data, key, template=template_list):
@@ -165,7 +207,6 @@ class CognitionList(Cognition):
         # This is just temporary
         self.contents = str(self.data)
 
-template_dictlist = env.get_template('dictlist.html.j2')
 class CognitionDictList(Cognition):
     # TODO - display missing keys, allow sort on table, paginate for long lists,
     # show some charts for basic stuff if the data is suitable
@@ -217,7 +258,7 @@ class CognitionDictList(Cognition):
 class CognitionDict(Cognition):
     # TODO
     # Generic dictionary object, holds embedded kvs
-    def __init__(self, data, key, template=template_scalar):
+    def __init__(self, data, key, template=template_simple_kv):
         super(CognitionDict, self).__init__(data, key, template)
     # contents will probably need to be overloaded for this one...
 
@@ -238,8 +279,6 @@ class CognitionDict(Cognition):
                 "key_counts": len(self.data.keys()),
             }
 
-
-template_simple_kv = env.get_template('simple_kv.html.j2')
 class CognitionDictFlat(CognitionList):
     # TODO
     # Simple (flat) dictionary - this can probably be displayed as a table

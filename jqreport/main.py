@@ -1,7 +1,8 @@
 import argparse
 import datetime
 import os
-import yaml
+# import yaml
+# from yaml.constructor import ConstructorError
 import json
 import sys
 from .cognition import Cognition
@@ -9,9 +10,27 @@ import subprocess
 import platform
 import logging
 
+from .loader import load_handle
+
 # import dateutil.parser
 
 DEFAULT_OUTPUT_FILE = "jqreport_{}.html".format(datetime.datetime.utcnow().isoformat())
+
+# # Constructor for custom tags
+# def custom_tag(loader, suffix, node):
+#     if isinstance(node, yaml.SequenceNode):
+#         return {str(node.tag): list(node.value)}
+#     elif isinstance(node, yaml.MappingNode):
+#         return {str(node.tag): dict(node.value)}
+#     elif isinstance(node, yaml.ScalarNode):
+#         return {str(node.tag): loader.construct_scalar(node)}
+#     else:
+#         return {str(node.tag): node}
+
+# # yaml.add_multi_constructor('!', custom_tag)
+# yaml.add_multi_constructor('', custom_tag, Loader=yaml.SafeLoader)
+
+
 
 def main():
     # CLI entrypoint
@@ -41,9 +60,11 @@ def main():
 
     if args.in_file:
         with open(args.in_file, 'r') as f:
-            source_data = yaml.safe_load(f)
+            # source_data = yaml.safe_load(f)
+            source_data = load_handle(f)
     else:
-        source_data = yaml.safe_load(sys.stdin)
+        # source_data = yaml.safe_load(sys.stdin)
+        source_data = load_handle(sys.stdin)
     cog = Cognition(source_data)
 
     with open(args.out_file, 'w') as f:
