@@ -5,9 +5,9 @@
 {% endif %}
 {% endif %} #}
 <dl>
-{% for key, value in contents.data.items() %}
-    <dt><button type="button" class="btn btn-default">
-    <span class="fa fa-plus"></span></button>{{ key }}</dt>
+{% for this_key, value in contents.data.items() %}
+    <dt data-toggle="tooltip" title="{{ key }}.{{ this_key }}"><button type="button" class="btn btn-default">
+    <span class="fa fa-plus"></span></button>{{ this_key }}</dt>
     <dd>{{ value }}</dd>
 {% endfor %}
 </dl>

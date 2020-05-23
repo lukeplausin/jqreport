@@ -13,7 +13,7 @@ class SafeUnknownConstructor(yaml.constructor.SafeConstructor):
         wrapdata.datatype = lambda: None
         setattr(wrapdata, "wrapTag", node.tag)
         setattr(wrapdata, "wrapType", datatype)
-        return wrapdata
+        return {node.tag: wrapdata}
 
 
 class SafeUnknownLoader(SafeUnknownConstructor, yaml.loader.SafeLoader):

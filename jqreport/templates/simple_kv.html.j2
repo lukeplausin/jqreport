@@ -1,20 +1,22 @@
-{% from 'macros.html.j2' import show_source %}
+{# {% from 'macros.html.j2' import show_source %}
 {% if key != '.' %}
 {% if contents.data | length <= 1000 %}
-{{ show_source(raw, key) }}
+{{ show_source(raw, key, tag='h5') }}
 {% endif %}
-{% endif %}
+{% endif %} #}
 
 <div class="row mb-3">
 <table class="table" data-toggle="table" id="{{ key | replace('.', '_') | urlencode }}"
   {# data-url="#json_{{ key | replace('.', '_') | urlencode }}" #}
+{% if (contents.data | length > 10) %}
   data-pagination="true"
   data-search="true"
   data-page-size="50"
   data-page-list="[10, 25, 50, 100, 250, 500, 1000, All]"
+{% endif %}
     >
   <thead>
-    <tr>
+    <tr data-toggle="tooltip" title="{{ key }}">
       <th data-sortable="true" data-field="key" scope="col">Key</th>
       <th data-sortable="true" data-field="value" scope="col">Value</th>
     </tr>

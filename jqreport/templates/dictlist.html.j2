@@ -1,20 +1,22 @@
-{% from 'macros.html.j2' import show_source %}
+{# {% from 'macros.html.j2' import show_source %}
 {% if key != '.' %}
 {% if contents.data | length <= 1000 %}
-{{ show_source(raw, key) }}
+{{ show_source(raw, key, tag='h5') }}
 {% endif %}
-{% endif %}
+{% endif %} #}
 
 <div class="row mb-3">
 <table class="table" data-toggle="table" id="{{ key | replace('.', '_') | urlencode }}"
   {# data-url="#json_{{ key | replace('.', '_') | urlencode }}" #}
+{% if (contents.data | length > 20) %}
   data-pagination="true"
   data-search="true"
   data-page-size="50"
   data-page-list="[10, 25, 50, 100, 250, 500, 1000, All]"
+{% endif %}
     >
   <thead>
-    <tr>
+    <tr data-toggle="tooltip" title="{{ key }}">
       <th data-sortable="true" data-field="index" scope="col">#</th>
 {% for table_key in contents.table_keys %}
       <th data-sortable="true" data-field="{{ table_key }}" scope="col">{{ table_key }}</th>
@@ -22,7 +24,24 @@
     </tr>
   </thead>
 {% if (contents.data | length <= 1000) or True %}
+
 {# Couldnt get javascript working... #}
+{% if contents.data is mapping %}
+   <tbody>
+{% for row_key, row in contents.data.items() %}
+    <tr>
+      <th scope="row">{{ row_key }}</th>
+{% if row is mapping %}
+{% for table_key in contents.table_keys %}
+      <td>{{ row[table_key] | default("<em>Not Set</em>") }}</td>
+{% endfor %}
+{% else %} {# display as scalar #}
+      <td colspan="{{ contents.table_keys | length }}">{{ row }}</td>
+{% endif %}
+    </tr>
+{% endfor %}
+  </tbody>
+{% else %}
    <tbody>
 {% for row in contents.data %}
     <tr>
@@ -37,6 +56,7 @@
     </tr>
 {% endfor %}
   </tbody>
+{% endif %}
 {% endif %}
 </table>
 
