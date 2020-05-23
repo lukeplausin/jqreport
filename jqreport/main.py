@@ -33,7 +33,7 @@ def main():
     cog = Cognition(source_data)
 
     with open(args.out_file, 'w') as f:
-        f.write(cog.top_level())
+        f.write(cog.render())
 
 if __name__ == "__main__":
     main()

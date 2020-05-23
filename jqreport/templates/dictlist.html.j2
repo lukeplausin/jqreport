@@ -1,0 +1,35 @@
+{% from 'macros.html.j2' import show_source %}
+{% if key != '.' %}
+{{ show_source(raw, key) }}
+{% endif %}
+
+<div class="row mb-3">
+<table class="table">
+  <thead>
+    <tr>
+      <th scope="col">#</th>
+{% for table_key in contents.table_keys %}
+      <th scope="col">{{ table_key }}</th>
+{% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+{% for row in contents.data %}
+      <th scope="row">{{ loop.index }}</th>
+{% if row is mapping %}
+{% for table_key in contents.table_keys %}
+      <td>{{ row[table_key] | default("<em>Not Set</em>") }}</td>
+{% endfor %}
+{% else %} {# display as scalar #}
+      <td colspan="{{ contents.table_keys | length }}">{{ row }}</td>
+{% endif %}
+    </tr>
+{% endfor %}
+  </tbody>
+</table>
+</div>
+
+{# TODO: Add info about what keys are omitted, percentage of keys in table etc...
+   sort by columns, search bar, pie chart....
+ #}

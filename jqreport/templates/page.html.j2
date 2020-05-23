@@ -1,3 +1,4 @@
+{% from 'macros.html.j2' import show_source %}
 <html>
     <head>
         <title>JQReport</title>
@@ -10,31 +11,20 @@
         <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
 
         <!-- Code formatting -->
-	    <link href="https://myCDN.com/prism@v1.x/themes/prism.css" rel="stylesheet" />
+	    {# <link href="https://myCDN.com/prism@v1.x/themes/prism.css" rel="stylesheet" />
         <script src="https://myCDN.com/prism@v1.x/components/prism-core.min.js"></script>
-        <script src="https://myCDN.com/prism@v1.x/plugins/autoloader/prism-autoloader.min.js"></script>
+        <script src="https://myCDN.com/prism@v1.x/plugins/autoloader/prism-autoloader.min.js"></script> #}
+        <style>
+            td {word-break:break-all;}
+        </style>
     </head>
     <body>
         <div class="container">
             {# Title (key) + view source control #}
-            <div class="row mb-3">
-                <div class="col-10 themed-grid-col">
-                    <h1>{% if key == '_' %}Top level{% else %}{{ key }}{% endif %}</h1></div>
-                <div class="col-2 themed-grid-col"><p>
-                    <a class="btn btn-primary" data-toggle="collapse" href="#{{ key }}" role="button" aria-expanded="false" aria-controls="collapseExample">
-                        Show Source
-                    </a></p>
-                </div>
-                <div class="collapse" id="{{ key }}">
-                    <div class="card card-body">
-                        <p><pre class="prettyprint"><code class="language-json">{{ formatted }}</code></pre></p>
-                    </div>
-                </div>
-            </div>
+            {{ show_source(raw, key) }}
             
             {# Cognitioned #}
-
-            
+            {{ contents }}
         </div>
 
         {# Code formatting #}

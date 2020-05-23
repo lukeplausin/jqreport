@@ -1,0 +1,16 @@
+{% macro show_source(raw, key) %}
+<div class="row mb-3">
+    <div class="col-10 themed-grid-col">
+        <h1>{% if key == '.' %}Top Level Object{% else %}{{ key }}{% endif %}</h1></div>
+    <div class="col-2 themed-grid-col"><p>
+        <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#{{ key | replace('.', '_') | urlencode }}" aria-expanded="false" aria-controls="collapseExample">
+            Show Source
+        </button></p>
+    </div>
+    <div class="collapse" id="{{ key | replace('.', '_') | urlencode }}">
+        <div class="card card-body">
+            <p><pre class="prettyprint"><code class="language-json">{{ raw }}</code></pre></p>
+        </div>
+    </div>
+</div>
+{% endmacro %}
